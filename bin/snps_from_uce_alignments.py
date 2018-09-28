@@ -94,16 +94,16 @@ name_file = open (config, 'r')
 taxa_list = name_file.readlines()
 taxa_names = []
 for element in taxa_list:
-	taxa_names.append(element.replace("\n", ""))
+	taxa_names.append(element.replace("\n", "").replace(" ", ""))
 snp_mode = args.snps
 
 print "\n\n"
-print " ____________________________________________________"
-print "|Launching SNP extraction script...                  |"
-print "|                                                    |"
-print "|Written by Tobias Hofmann, inspired by Yann Bertrand|"
-print "|Version 1.2, January 2017                           |"
-print "|____________________________________________________|"
+print " ______________________________________________________"
+print "|Launching SNP extraction script...                    |"
+print "|                                                      |"
+print "|Written by Tobias Andermann, inspired by Yann Bertrand|"
+print "|Version 1.3, September 2018                           |"
+print "|______________________________________________________|"
 
 if not args.phased:
 	print "\n\nScript is treating data as unphased alignment (add flag --phased to command if your data is phased)\n\n"
@@ -582,6 +582,7 @@ for fasta in fasta_files[:]:
 	if list_check == False:
 		missing_elements = []
 		for element in taxa_names:
+			#print element,list_sequences,element in list_sequences
 			if element not in list_sequences:
 				missing_elements.append(element)
 		print "These taxa are missing in alignment:", missing_elements, "\nSequences for missing taxa will be generated only containing \"N\"."
