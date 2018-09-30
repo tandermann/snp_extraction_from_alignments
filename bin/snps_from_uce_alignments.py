@@ -132,19 +132,19 @@ def variable_positions(alignment):
 		nucleotides = set(column[0])
 		# if there is a 'N' in the set, just ignore it and export position if more exactly 2 states present at this position
 		if not "N" in nucleotides:
-			if not args.base_export:
-				count_list = []
-				if len(nucleotides) == 2:
-					for element in nucleotides:
-						base_count = column[0].count(element)
-						count_list.append(base_count)
-					# this additional filter avoids positions that are only present in a single sequence (phylogenetically uninformative)
-					if 1 not in count_list:
-						var_col.append(x)
-			# in case the base_export flag is activated, we want all variable positions, no matter how many states are present
-			else:
-				if len(nucleotides) > 1:
+			#if not args.base_export:
+			count_list = []
+			if len(nucleotides) == 2:
+				for element in nucleotides:
+					base_count = column[0].count(element)
+					count_list.append(base_count)
+				# this additional filter avoids positions that are only present in a single sequence (phylogenetically uninformative)
+				if 1 not in count_list:
 					var_col.append(x)
+			# in case the base_export flag is activated, we want all variable positions, no matter how many states are present
+			#else:
+			#	if len(nucleotides) > 1:
+			#		var_col.append(x)
 	return var_col
 
 
@@ -158,19 +158,19 @@ def variable_positions_incl_missing(alignment):
 		# if there is a 'N' in the set, just ignore it and export position if more exactly 2 states present at this position
 		if "N" in nucleotides:
 			nucleotides.remove('N')
-		if not args.base_export:
-			count_list = []
-			if len(nucleotides) == 2:
-				for element in nucleotides:
-					base_count = column[0].count(element)
-					count_list.append(base_count)
-				# this additional filter avoids positions that are only present in a single sequence (phylogenetically uninformative)
-				if 1 not in count_list:
-					var_col.append(x)
-		# in case the base_export flag is activated, we want all variable positions, no matter how many states are present
-		else:
-			if len(nucleotides) > 1:
+		#if not args.base_export:
+		count_list = []
+		if len(nucleotides) == 2:
+			for element in nucleotides:
+				base_count = column[0].count(element)
+				count_list.append(base_count)
+			# this additional filter avoids positions that are only present in a single sequence (phylogenetically uninformative)
+			if 1 not in count_list:
 				var_col.append(x)
+		# in case the base_export flag is activated, we want all variable positions, no matter how many states are present
+		#else:
+		#	if len(nucleotides) > 1:
+		#		var_col.append(x)
 	return var_col
 
 
