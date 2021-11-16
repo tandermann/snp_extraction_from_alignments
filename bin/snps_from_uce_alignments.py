@@ -4,20 +4,20 @@
 Created on Tue Nov 16 12:09:12 2021
 
 @author: Tobias Andermann (tobiasandermann88@gmail.com)
+
+requirements:
+- python 3.9.7
+- numpy 1.21.4
+- Biopython 1.79
 """
 
-from argparse import ArgumentParser
 import os, glob
+from argparse import ArgumentParser
 import numpy as np
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 
-
-#requirements
-# - python3.9
-# - numpy
-# - Biopython
 
 def add_arguments(parser):
     parser.add_argument(
@@ -39,13 +39,13 @@ def add_arguments(parser):
         help="The output directory where results will be saved."
     )
     parser.add_argument(
-        '--missing',
+        '--include_missing',
         action='store_true',
         default=False,
         help="Use this flag if you want to include sites with missing data into the SNP alignment (leads to a higher SNP yield)."
     )
     parser.add_argument(
-        '--base_export',
+        '--export_nucleotides',
         action='store_true',
         default=False,
         help="Use this flag if you want to export variable positions as nucleotides (A/C/T/G) rather than binary SNPs (default, 0/1)."
@@ -65,13 +65,18 @@ def add_arguments(parser):
     )
     parser.add_argument(
         '--delimiter',
-        choices=["one", "all"],
         type=str,
         default='_',
         metavar='str',
         help="When using the '--phased' setting, specify here the delimiter that separates the different alleles from the sample name in the alignment. Example: If your alignment contains two alleles for sample1 which are named sample1_allele1 and sample1_allele2, the delimiter would be '_' (provide delimiter without quotation marks)."
     )
-
+    parser.add_argument(
+        '--seed',
+        type=int,
+        default=None,
+        metavar='int',
+        help="Set seed for reproducibility."
+    )
 
 
 def variable_positions(alignment,valid_chars='ACTG-',include_missing=False):
@@ -98,17 +103,20 @@ def variable_positions(alignment,valid_chars='ACTG-',include_missing=False):
 parser = ArgumentParser()
 add_arguments(parser)
 args = parser.parse_args()
-# for trouble shooting activate the code below
+# # for trouble shooting activate the code below
 # arguments = ['--input',
 #              'personal_data/PHASED-DATA_all9-taxa-incomplete-mafft-nexus-edge-trimmed-fasta',
 #              '--config',
 #              'personal_data/snp-conf.txt',
 #              '--output',
 #              'personal_data/test',
-#              '--missing',
-#              '--phased',
 #              '--snps_per_locus',
-#              'all']
+#              'one',
+#              '--phased',
+#              '--delimiter',
+#              '_',
+#              '--seed',
+#              '1234']
 # args = parser.parse_args(arguments)
 
 
@@ -121,6 +129,12 @@ if not os.path.exists(out_dir):
 target_taxa = np.loadtxt(args.config,dtype=str)
 snp_mode = args.snps_per_locus
 valid_chars = 'ACTG-'
+if args.seed is None:
+    seed = np.random.choice(np.arange(0,9999999))
+else:
+    seed = args.seed
+np.random.seed(seed)
+print('Running SNP extraction with seed %i'%seed)
 
 # screen output
 print( "\n")
@@ -136,8 +150,8 @@ if not args.phased:
     print( "\nScript is treating data as unphased alignment (add flag --phased if your data contains multiple allele sequences per individual).")
 else:
     delimiter = args.delimiter
-if not args.missing:
-    print( "\nSequences with missing data are not considered during SNP extraction (add flag --missing for higher SNP yield, including sites with missing data).\n")
+if not args.include_missing:
+    print( "\nSequences with missing data are not considered during SNP extraction (add flag --include_missing for higher SNP yield, including sites with missing data).\n")
 else:
     print( "\nMissing data option is activated. The final SNP alignment will contain sites with missing nucleotides, which are coded as \'?\'.\n")
 
@@ -157,14 +171,15 @@ for fasta in fasta_files:
     missing_elements_boolean = [not i in list_sequence_names for i in target_taxa]
     missing_taxa = target_taxa[missing_elements_boolean]
     if len(missing_taxa)>0:
-        if args.missing:
+        if args.include_missing:
             print( "%i taxa missing in alignment. These are substituted with dummy sequences:" %len(missing_taxa))
             # add dummy sequences for missing taxa
             dummy_seqs = ["N" * length_alignment for i in missing_taxa]
             fasta_content = np.vstack([fasta_content,np.array([missing_taxa,dummy_seqs]).T])
             list_sequence_names = list(fasta_content[:, 0])
         else:
-            print("Alignment %s does not contain all target samples and is therefore discarded. Add --missing flag to enable extraction of SNPs from sites despite missing sequences."%fasta)
+            print("Alignment discarded as it does not contain all target samples. Add --include_missing flag to surpress discarding of sites with missing information.")
+            continue
     # get rows that are in target_taxa in same order as provided in conf file
     row_indices = [list_sequence_names.index(i) for i in target_taxa]
     selected_fasta_content = fasta_content[row_indices]
@@ -172,7 +187,7 @@ for fasta in fasta_files:
     # find variable positions in alignment
     sequence_names = selected_fasta_content[:,0]
     alignment = np.array([list(i) for i in selected_fasta_content[:,1]])
-    var_pos_list = variable_positions(alignment,valid_chars=valid_chars,include_missing=args.missing)
+    var_pos_list = variable_positions(alignment,valid_chars=valid_chars,include_missing=args.include_missing)
 
     # extract the SNP output
     if len(var_pos_list) == 0:
@@ -181,22 +196,22 @@ for fasta in fasta_files:
         if snp_mode == 'one':
             # chooses randomly one snp position and saves position-coordinate
             selected_index = np.random.choice(var_pos_list, 1)[0]
-            print("Sampling position %s for %s"%(selected_index,os.path.basename(fasta)))
+            print("Sampling position %s"%selected_index)
             # creates an alignment with only the extracted position
             temp_snp_align = alignment[:,selected_index].reshape(len(alignment),1)
         elif snp_mode == 'all':
             selected_index = var_pos_list
-            print("Sampling positions %s for %s" % (selected_index, os.path.basename(fasta)))
+            print("Sampling positions %s" %selected_index)
             temp_snp_align = alignment[:,selected_index]
     for i in temp_snp_align.T:
         i = i.copy()
         counts = np.array([list(i).count(j) for j in valid_chars])
-        valid_count_ids = np.where(counts>0)[0]
-        valid_chars_pos = np.array(list(valid_chars))[valid_count_ids]
-        ancestral_state_nucleotide = valid_chars_pos[np.argmax(counts[valid_count_ids])]
-        derived_state_nucleotide = valid_chars_pos[np.argmin(counts[valid_count_ids])]
+        # get the most common variant as ancestral state
+        ancestral_state_nucleotide = list(valid_chars)[np.argsort(counts)[-1]]
+        # second common is derived state
+        derived_state_nucleotide = list(valid_chars)[np.argsort(counts)[-2]]
         i[[j not in list(valid_chars) for j in i]] = '?'
-        if not args.base_export:
+        if not args.export_nucleotides:
             if args.phased:
                 # find pairs of allele sequences for each sample
                 reduced_names = np.array([args.delimiter.join(i.split(args.delimiter)[:-1]) for i in sequence_names])
@@ -219,17 +234,22 @@ for fasta in fasta_files:
                 # replace with the new values
                 i[i==ancestral_state_nucleotide] = 0
                 i[i==derived_state_nucleotide] = 1
+        # if '?' in i:
+        #     print(fasta)
+        #     exit()
         snp_alignment.append(i)
 
 # convert into numpy array
 final_snp_alignment = np.array(snp_alignment).T
-if args.phased:
-    sequence_names = np.unique(reduced_names)
+if args.phased and not args.export_nucleotides:
+    reduced_names = np.array([args.delimiter.join(i.split(args.delimiter)[:-1]) for i in sequence_names])
+    final_sequence_names = np.unique(reduced_names)
+else:
+    final_sequence_names = sequence_names
 
 sequence_collection = []
-for i,seq_name in enumerate(sequence_names):
-    sequence = ''.join(final_snp_alignment[i])
+for i,seq in enumerate(final_snp_alignment):
+    seq_name = final_sequence_names[i]
+    sequence = ''.join(seq)
     sequence_collection.append(SeqRecord(seq=Seq(sequence), id=seq_name, name=seq_name,description=''))
 SeqIO.write(sequence_collection, os.path.join(out_dir,'snp.fasta'), 'fasta-2line')
-
-
