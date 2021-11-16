@@ -242,7 +242,10 @@ for fasta in fasta_files:
 # convert into numpy array
 final_snp_alignment = np.array(snp_alignment).T
 if args.phased and not args.export_nucleotides:
-    reduced_names = np.array([args.delimiter.join(i.split(args.delimiter)[:-1]) for i in sequence_names])
+    try:
+        reduced_names = np.array([args.delimiter.join(i.split(args.delimiter)[:-1]) for i in sequence_names])
+    except NameError:
+        exit('No suitable sites for SNP extraction were found in the alignment data. Consider using --include_missing flag to allow for sites containing missing data. Alternatively reduce the set of taxa in the config file to only samples with decent data throughout the alignments.')
     final_sequence_names = np.unique(reduced_names)
 else:
     final_sequence_names = sequence_names
@@ -252,4 +255,11 @@ for i,seq in enumerate(final_snp_alignment):
     seq_name = final_sequence_names[i]
     sequence = ''.join(seq)
     sequence_collection.append(SeqRecord(seq=Seq(sequence), id=seq_name, name=seq_name,description=''))
-SeqIO.write(sequence_collection, os.path.join(out_dir,'snp.fasta'), 'fasta-2line')
+if args.export_nucleotides:
+    outfile = os.path.join(out_dir,'snps_nucleotides.fasta')
+else:
+    outfile = os.path.join(out_dir,'snps_binary.fasta')
+if args.include_missing:
+    outfile = outfile.replace('.fasta','_incl_missing.fasta')
+SeqIO.write(sequence_collection, outfile, 'fasta-2line')
+
