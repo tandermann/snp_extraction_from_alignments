@@ -50,7 +50,9 @@ Besides the input alignments, the program also requires a `.txt` file with a lis
 
 Below you can find some different use cases demonstrated on example data available from the [GitHub repo](https://github.com/tobiashofmann88/snp_extraction_from_alignments).
 
-## Simulated alignment data
+## Extracting SNPs from alignments
+
+### Simulated, clean alignments
 These alignments were simulated with the simulation program BPP. They are therefore free of missing sites or ambiguities. This is usually not the case for empirical data, as we see in the second example below.
 
 The alignments contain two allele sequences for each sample per locus. These sequences are named in the following manner in the fasta file, indicating the sequences for allele 0 and allele 1 for sampleA:
@@ -71,7 +73,7 @@ By default the program extracts SNPs in binary format, where 0 = ancestral state
 `python bin/snps_from_uce_alignments.py --input example_files/alignments/simulated_alignments --config example_files/config_file_simulated.txt --output example_files/snps/simulated_data --snps_per_locus one --phased --delimiter _ --export_nucleotides`
 
 
-## Empirical alignment data
+### Real, messy alignments
 
 Empirical data often have additional complications, which were not present in the simulated alignments above. These are mostly missing sequences or parts of sequences for several samples at a given locus, as well as ambiguity codes at sites where there is uncertainty about the nucleotide call.
 
