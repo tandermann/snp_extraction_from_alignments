@@ -1,7 +1,9 @@
 # snp_extraction_from_alignments
 *Written by Tobias Andermann (tobiasandermann88@gmail.com)*
 
-This repository contains a freely accessible program for the extraction of Single Nucleotide Polymorphisms (SNPs) from multiple sequence alignments. The program only allows to extract binary positions, i.e. sites with exactly two nucleotides variants, which each are shared by at least two samples. the latter ensures that the extracted sites are phylogenetically informative. The output SNP alignment is in fasta format and can be used for downstream applications, such as [SNAPP](https://doi.org/10.1093/molbev/mss086) or [Admixture](https://doi.org/10.1101/gr.094052.109).
+This repository contains a freely accessible program for the extraction of Single Nucleotide Polymorphisms (SNPs) from multiple sequence alignments. To run the program, you can [download this GitHub repo](https://github.com/tobiashofmann88/snp_extraction_from_alignments/archive/refs/heads/master.zip). This includes the program as well as some example data and this readme file.
+
+The program is designed to extract binary positions, i.e. sites with exactly two nucleotides variants, which each are shared by at least two samples. The latter ensures that the extracted sites are phylogenetically informative. The output SNP alignment is in fasta format and can be used for downstream applications, such as [SNAPP](https://doi.org/10.1093/molbev/mss086) or [Admixture](https://doi.org/10.1101/gr.094052.109).
 
 
 The program is written in Python and can be executed from your **bash command line**. I recommend running it with [**Python3.9**](https://www.python.org/downloads/). Older Python3 versions may work as well but are not tested. Other requirements are the biopython and numpy libraries, which can be installed with pip:
