@@ -81,7 +81,7 @@ The program only considers the base DNA nucleotides (`A,C,T.G`) as well as gaps 
 
 `python bin/snps_from_uce_alignments.py --input example_files/alignments/empirical_alignments --config example_files/config_file_empirical.txt --output example_files/snps/empirical_data --snps_per_locus one --phased --delimiter _`
 
-This can lead to very few or no positions being extracted, which becomes more likely for alignments with many samples, with always some samples missing for each alignment. To still extract SNP data, we can add the `--include_missing` flag, which allows for the extraction of sites even if these contain missing data for some of the samples.
+In this case, the command leads to no positions being extracted, which becomes increasingly likely for alignments with many samples, with some of the samples missing in each alignment. To still extract SNP data, we can add the `--include_missing` flag, which allows for the extraction of sites even if these contain missing data for some of the samples.
 
 `python bin/snps_from_uce_alignments.py --input example_files/alignments/empirical_alignments --config example_files/config_file_empirical.txt --output example_files/snps/empirical_data --snps_per_locus one --phased --delimiter _ --include_missing`
 
