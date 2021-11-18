@@ -78,7 +78,7 @@ def add_arguments(parser):
     )
 
 
-def variable_positions(alignment,valid_chars='ACTG-',include_missing=False):
+def variable_positions(alignment,valid_chars='ACTGactg-',include_missing=False):
     valid_chars_list = list(valid_chars)
     alignment_T = alignment.T
     variable_chars_per_col = [list(set(i)) for i in alignment_T]
@@ -126,7 +126,7 @@ out_dir = args.output
 if not os.path.exists(out_dir):
     os.makedirs(out_dir)
 target_taxa = np.loadtxt(args.config,dtype=str)
-valid_chars = 'ACTG-'
+valid_chars = 'ACTGactg-'
 if args.seed is None:
     seed = np.random.choice(np.arange(0,9999999))
 else:
