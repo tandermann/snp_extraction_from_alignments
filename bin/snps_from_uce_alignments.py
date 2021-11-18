@@ -51,11 +51,10 @@ def add_arguments(parser):
         help="Use this flag if you want to export variable positions as nucleotides (A/C/T/G) rather than binary SNPs (default, 0/1)."
     )
     parser.add_argument(
-        '--snps_per_locus',
-        choices=["one", "all"],
-        default="one",
-        metavar='str',
-        help="If 'one' (default), then only one SNP is extracted per locus (recommended for unlinked SNPs, e.g. for use in SNAPP). If 'all', then all variable positions are extracted."
+        '--extract_all',
+        action='store_true',
+        default=False,
+        help="By default the program extracts only one SNP per alignment. Use this flag if you instead want to extract all variable sites."
     )
     parser.add_argument(
         '--phased',
@@ -127,24 +126,18 @@ out_dir = args.output
 if not os.path.exists(out_dir):
     os.makedirs(out_dir)
 target_taxa = np.loadtxt(args.config,dtype=str)
-snp_mode = args.snps_per_locus
 valid_chars = 'ACTG-'
 if args.seed is None:
     seed = np.random.choice(np.arange(0,9999999))
 else:
     seed = args.seed
 np.random.seed(seed)
-print('Running SNP extraction with seed %i'%seed)
 
 # screen output
-print( "\n")
-print( " ______________________________________")
-print( "|  Launching SNP extraction script...  |")
-print( "|                                      |")
-print( "|  Written by Tobias Andermann         |")
-print( "|  Version 2.0, November 2021          |")
-print( "|______________________________________|")
-print( "\n")
+print( "Written by Tobias Andermann")
+print( "Version 2.0, November 2021")
+print( "Launching SNP extraction script with seed %i ..."%seed)
+
 
 if not args.phased:
     print( "\nScript is treating data as unphased alignment (add flag --phased if your data contains multiple allele sequences per individual).")
@@ -193,16 +186,16 @@ for fasta in fasta_files:
     if len(var_pos_list) == 0:
         print("No SNP extraction performed for '%s' due too a lack of polymorphic sites."%os.path.basename(fasta))
     else:
-        if snp_mode == 'one':
+        if args.extract_all:
+            selected_index = var_pos_list
+            print("Sampling positions %s" %selected_index)
+            temp_snp_align = alignment[:,selected_index]
+        else:
             # chooses randomly one snp position and saves position-coordinate
             selected_index = np.random.choice(var_pos_list, 1)[0]
             print("Sampling position %s"%selected_index)
             # creates an alignment with only the extracted position
             temp_snp_align = alignment[:,selected_index].reshape(len(alignment),1)
-        elif snp_mode == 'all':
-            selected_index = var_pos_list
-            print("Sampling positions %s" %selected_index)
-            temp_snp_align = alignment[:,selected_index]
     for i in temp_snp_align.T:
         i = i.copy()
         counts = np.array([list(i).count(j) for j in valid_chars])
@@ -259,7 +252,15 @@ if args.export_nucleotides:
     outfile = os.path.join(out_dir,'snps_nucleotides.fasta')
 else:
     outfile = os.path.join(out_dir,'snps_binary.fasta')
+
+
+if args.export_nucleotides:
+    outfile = outfile.replace('.fasta','_nucleotides.fasta')
+if args.phased:
+    outfile = outfile.replace('.fasta','_phased.fasta')
 if args.include_missing:
     outfile = outfile.replace('.fasta','_incl_missing.fasta')
+if args.extract_all:
+    outfile = outfile.replace('.fasta','_all_snps.fasta')
 SeqIO.write(sequence_collection, outfile, 'fasta-2line')
 
