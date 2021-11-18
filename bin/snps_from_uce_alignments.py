@@ -248,12 +248,8 @@ for i,seq in enumerate(final_snp_alignment):
     seq_name = final_sequence_names[i]
     sequence = ''.join(seq)
     sequence_collection.append(SeqRecord(seq=Seq(sequence), id=seq_name, name=seq_name,description=''))
-if args.export_nucleotides:
-    outfile = os.path.join(out_dir,'snps_nucleotides.fasta')
-else:
-    outfile = os.path.join(out_dir,'snps_binary.fasta')
 
-
+outfile = os.path.join(out_dir,'snps.fasta')
 if args.export_nucleotides:
     outfile = outfile.replace('.fasta','_nucleotides.fasta')
 if args.phased:
